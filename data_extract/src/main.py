@@ -7,6 +7,7 @@ import zipfile
 
 from dotenv import load_dotenv
 
+
 # TODO: Port this to support requests, not urllib
 def get_ssl_context() -> ssl.SSLContext:
     context: ssl.SSLContext = ssl.create_default_context()
@@ -43,7 +44,6 @@ def download_file(year: int, month: int, target_dir: str) -> str:
 
 def unzip_file(source_path: str, target_path: str) -> str:
     zipped_file: zipfile.ZipFile = zipfile.ZipFile(file=source_path, mode="r")
-
     zipped_file.extractall(path=target_path)
 
     csv_path: str = f"{target_path}/{zipped_file.namelist()[0]}"
@@ -51,15 +51,20 @@ def unzip_file(source_path: str, target_path: str) -> str:
 
     return csv_path
 
-def gzip_file(source_path: str, target_path: str) -> str:
-    gzip_path: str = f"{target_path}/{source_path.replace('.csv', '.gzip')}"
+
+def gzip_file(source_path: str, target_path: str, year: int, month: int) -> str:
+    gzip_path: str = f"{target_path}/{year}_{month}.gzip"
+
+    if not os.path.exists(target_path):
+        os.mkdir(target_path)
 
     # https://docs.python.org/3/library/gzip.html#examples-of-usage
     with open(source_path, "rb") as source_file:
-        with gzip.open(target_path, "wb") as target_file:
+        with gzip.open(gzip_path, "wb") as target_file:
             shutil.copyfileobj(source_file, target_file)
 
     return gzip_path
+
 
 def load_to_gcs():
     pass
@@ -70,12 +75,17 @@ def main() -> str:
     target_dir_dl: str = "../download/"
     target_dir_csv: str = "../csv"
     target_dir_gzip: str = "../gzip"
+    year: int = 2015
+    month: int = 1
 
-    download_path: str = download_file(2015, 1, target_dir=target_dir_dl)
+    download_path: str = download_file(year=year, month=month, target_dir=target_dir_dl)
     csv_path: str = unzip_file(source_path=download_path, target_path=target_dir_csv)
-    gzip_path: str = gzip_file(source_path=csv_path, target_path=target_dir_gzip)
+    gzip_path: str = gzip_file(
+        source_path=csv_path, target_path=target_dir_gzip, year=year, month=month
+    )
 
     print(gzip_path)
+
 
 if __name__ == "__main__":
     result: str = main()
