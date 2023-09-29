@@ -7,7 +7,6 @@ import zipfile
 
 from dotenv import load_dotenv
 
-
 # TODO: Port this to support requests, not urllib
 def get_ssl_context() -> ssl.SSLContext:
     context: ssl.SSLContext = ssl.create_default_context()
@@ -70,10 +69,13 @@ def main() -> str:
     load_dotenv()
     target_dir_dl: str = "../download/"
     target_dir_csv: str = "../csv"
+    target_dir_gzip: str = "../gzip"
+
     download_path: str = download_file(2015, 1, target_dir=target_dir_dl)
     csv_path: str = unzip_file(source_path=download_path, target_path=target_dir_csv)
+    gzip_path: str = gzip_file(source_path=csv_path, target_path=target_dir_gzip)
 
-    print(csv_path)
+    print(gzip_path)
 
 if __name__ == "__main__":
     result: str = main()
