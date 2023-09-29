@@ -1,6 +1,8 @@
 *.zip
 *.gzip
 data_extract/csv/
+data_extract/download/
+data_extract/gzip/
 
 # Terraform
 .terraform/
