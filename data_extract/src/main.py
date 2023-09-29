@@ -6,6 +6,7 @@ import ssl
 import zipfile
 
 from dotenv import load_dotenv
+from google.cloud import storage
 
 
 # TODO: Port this to support requests, not urllib
@@ -66,12 +67,18 @@ def gzip_file(source_path: str, target_path: str, year: int, month: int) -> str:
     return gzip_path
 
 
-def load_to_gcs():
-    pass
+def load_to_gcs(source_file: str, bucket_name: str) -> str:
+    base_file_name: str = os.path.basename(source_file)
+    client: storage.Client = storage.Client()
+    bucket: storage.Bucket = client.get_bucket(bucket_or_name=bucket_name)
+    blob: storage.Blob = storage.Blob(name=base_file_name, bucket=bucket)
+    blob.upload_from_file(file_obj=source_file)
 
+    return f"gs://{bucket_name}/{base_file_name}"
 
 def main() -> str:
     load_dotenv()
+    target_bucket: str = "ajp-ds-gcp-flights"
     target_dir_dl: str = "../download/"
     target_dir_csv: str = "../csv"
     target_dir_gzip: str = "../gzip"
@@ -83,8 +90,9 @@ def main() -> str:
     gzip_path: str = gzip_file(
         source_path=csv_path, target_path=target_dir_gzip, year=year, month=month
     )
+    gcs_path: str = load_to_gcs(source_file=gzip_path, bucket_name=target_bucket)
 
-    print(gzip_path)
+    print(gcs_path)
 
 
 if __name__ == "__main__":
