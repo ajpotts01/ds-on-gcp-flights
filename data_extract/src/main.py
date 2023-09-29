@@ -3,6 +3,7 @@ import requests
 import ssl
 import zipfile
 
+from dotenv import load_dotenv
 
 # TODO: Port this to support requests, not urllib
 def get_ssl_context() -> ssl.SSLContext:
@@ -21,13 +22,16 @@ def download_file(year: int, month: int, target_dir: str) -> str:
     target_url: str = f"{base_url}_{base_filename}"
     target_filename: str = f"{target_dir}/{base_filename}"
 
+    env: str = os.getenv("ENV", "DEV")
+    verify_ssl: bool = env == "PROD"
+
     if not os.path.exists(target_dir):
         os.mkdir(target_dir)
 
     with open(file=target_filename, mode="wb") as target_file:
         print(f"Requesting from: {target_url}")
         # Note: even a 20mb file takes a while to download from this site
-        response: requests.Response = requests.get(url=target_url, verify=False)
+        response: requests.Response = requests.get(url=target_url, verify=verify_ssl)
         print("Writing file")
         target_file.write(response.content)
         print("Done")
@@ -47,6 +51,7 @@ def unzip_file(source_path: str, target_path: str) -> str:
 
 
 def main() -> str:
+    load_dotenv()
     target_dir: str = "./test/"
     return download_file(2015, 1, target_dir=target_dir)
 
