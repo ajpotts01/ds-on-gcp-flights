@@ -1,9 +1,12 @@
+import gzip
 import os
 import requests
+import shutil
 import ssl
 import zipfile
 
 from dotenv import load_dotenv
+
 
 # TODO: Port this to support requests, not urllib
 def get_ssl_context() -> ssl.SSLContext:
@@ -49,12 +52,28 @@ def unzip_file(source_path: str, target_path: str) -> str:
 
     return csv_path
 
+def gzip_file(source_path: str, target_path: str) -> str:
+    gzip_path: str = f"{target_path}/{source_path.replace('.csv', '.gzip')}"
+
+    # https://docs.python.org/3/library/gzip.html#examples-of-usage
+    with open(source_path, "rb") as source_file:
+        with gzip.open(target_path, "wb") as target_file:
+            shutil.copyfileobj(source_file, target_file)
+
+    return gzip_path
+
+def load_to_gcs():
+    pass
+
 
 def main() -> str:
     load_dotenv()
-    target_dir: str = "./test/"
-    return download_file(2015, 1, target_dir=target_dir)
+    target_dir_dl: str = "../download/"
+    target_dir_csv: str = "../csv"
+    download_path: str = download_file(2015, 1, target_dir=target_dir_dl)
+    csv_path: str = unzip_file(source_path=download_path, target_path=target_dir_csv)
 
+    print(csv_path)
 
 if __name__ == "__main__":
     result: str = main()
