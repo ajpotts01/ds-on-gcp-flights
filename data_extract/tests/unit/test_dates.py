@@ -2,6 +2,7 @@ import pytest
 
 from src.util.dates import get_next_month
 
+
 # Test a month with 30 days
 def test_next_month_thirty_days():
     input_year: str = "2023"
@@ -14,6 +15,7 @@ def test_next_month_thirty_days():
     got_year, got_month = get_next_month(year=input_year, month=input_month)
 
     assert got_year == want_year and got_month == want_month
+
 
 # Test a month with 31 days
 def test_next_month_thirty_one_days():
@@ -28,6 +30,7 @@ def test_next_month_thirty_one_days():
 
     assert got_year == want_year and got_month == want_month
 
+
 def test_next_month_roll_next_year():
     input_year: str = "2023"
     input_month: str = "12"
@@ -39,4 +42,3 @@ def test_next_month_roll_next_year():
     got_year, got_month = get_next_month(year=input_year, month=input_month)
 
     assert got_year == want_year and got_month == want_month
-

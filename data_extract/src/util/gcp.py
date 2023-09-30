@@ -42,15 +42,20 @@ def load_to_bigquery(
     table: bigquery.Table = client.get_table(table=table_name_full)
     return table
 
+
 def get_latest_month(bucket_name: str, target_folder: str) -> Tuple[str, str]:
     client: storage.Client = storage.Client()
 
     bucket: storage.Bucket = client.get_bucket(bucket_or_name=bucket_name)
-    blobs: list[storage.Blob] = list(bucket.list_blobs(prefix="flights/raw"))
-    files: list[str] = [x.name for x in blobs if "csv" in x.name]
-    last_file: str = os.path.basename(files[-1])
-    year_month: str = last_file.split("_")
-    year: str = year_month[0]
-    month: str = year_month[1]
+    blobs: list[storage.Blob] = list(bucket.list_blobs(prefix=target_folder))
 
-    return year, month
+    if len(blobs) > 0:
+        files: list[str] = [x.name for x in blobs if "csv" in x.name]
+        last_file: str = os.path.basename(files[-1])
+        year_month: str = last_file.split("_")
+        year: str = year_month[0]
+        month: str = year_month[1].replace(".csv.gz", "")
+
+        return year, month
+
+    return None, None

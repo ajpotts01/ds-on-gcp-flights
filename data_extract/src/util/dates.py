@@ -1,6 +1,7 @@
 import datetime as dt
 from typing import Tuple
 
+
 def get_next_month(year: str, month: str) -> Tuple[str, str]:
     # Always get middle of the month
     full_date: dt.datetime = dt.datetime(year=int(year), month=int(month), day=15)
