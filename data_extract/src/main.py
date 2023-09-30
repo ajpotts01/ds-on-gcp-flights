@@ -42,8 +42,8 @@ def main(args: argparse.Namespace) -> bigquery.Table:
     target_project: str = os.getenv("PROJECT", None)
     target_dataset: str = os.getenv("DATASET", None)
     target_gcs_folder: str = "flights/raw"
-    year: int = int(args.year)
-    month: int = int(args.month)
+    year: str = args.year
+    month: str = args.month
 
     if args.bucket is not None:
         target_bucket = args.bucket
@@ -69,7 +69,6 @@ def main(args: argparse.Namespace) -> bigquery.Table:
             bucket_name=target_bucket,
             target_folder=target_gcs_folder,
         )
-
         table = gcp.load_to_bigquery(
             gcs_path=gcs_path,
             table_name="flights_raw",

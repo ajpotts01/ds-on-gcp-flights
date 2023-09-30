@@ -22,12 +22,12 @@ def dummy_file():
 
 
 def test_gzip_file(dummy_file: str):
-    expected_written_path: str = "./test_gzip/2023_2.csv.gz"
+    expected_written_path: str = "./test_gzip/2023_02.csv.gz"
 
     os.mkdir("./test_gzip")
 
     result: str = gzip_file(
-        source_path=dummy_file, target_path="./test_gzip", year=2023, month=2
+        source_path=dummy_file, target_path="./test_gzip", year="2023", month="2"
     )
 
     assert expected_written_path == result

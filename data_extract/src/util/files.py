@@ -14,8 +14,9 @@ def unzip_file(source_path: str, target_path: str) -> str:
     return csv_path
 
 
-def gzip_file(source_path: str, target_path: str, year: int, month: int) -> str:
-    gzip_path: str = f"{target_path}/{year}_{month}.csv.gz"
+def gzip_file(source_path: str, target_path: str, year: str, month: str) -> str:
+    month_padded: str = month.rjust(2, "0")
+    gzip_path: str = f"{target_path}/{year}_{month_padded}.csv.gz"
 
     if not os.path.exists(target_path):
         os.mkdir(target_path)
