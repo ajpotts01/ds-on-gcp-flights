@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from src.main import gzip_file
+from src.util.files import gzip_file
 
 
 @pytest.fixture
