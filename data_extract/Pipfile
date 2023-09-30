@@ -12,8 +12,6 @@ google-cloud-storage = "*"
 flask = "*"
 gunicorn = "*"
 google-cloud-bigquery = "*"
-pandas = "*"
-jupyter = "*"
 
 [dev-packages]
 
