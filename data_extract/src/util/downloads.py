@@ -13,12 +13,13 @@ def get_ssl_context() -> ssl.SSLContext:
     return context
 
 
-def download_file(year: int, month: int, target_dir: str) -> str:
+def download_file(year: str, month: str, target_dir: str) -> str:
     base_url: str = "https://transtats.bts.gov/PREZIP/On_Time_Reporting_Carrier_On_Time_Performance_1987_present"
-    base_filename: str = f"{year}_{month}.zip"
+    source_filename: str = f"{year}_{month}.zip"
 
-    target_url: str = f"{base_url}_{base_filename}"
-    target_filename: str = f"{target_dir}/{base_filename}"
+    target_url: str = f"{base_url}_{source_filename}"
+    month_padded: str = month.rjust(2, "0")
+    target_filename: str = f"{target_dir}/{year}_{month_padded}.zip"
 
     env: str = os.getenv("ENV", "DEV")
     verify_ssl: bool = env == "PROD"
