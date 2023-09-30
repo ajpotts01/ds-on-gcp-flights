@@ -22,7 +22,7 @@ def dummy_file():
 
 
 def test_gzip_file(dummy_file: str):
-    expected_written_path: str = "./test_gzip/2023_2.gzip"
+    expected_written_path: str = "./test_gzip/2023_2.csv.gz"
 
     os.mkdir("./test_gzip")
 
