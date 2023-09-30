@@ -6,6 +6,14 @@ name = "pypi"
 [packages]
 requests = "*"
 black = "*"
+python-dotenv = "*"
+pytest = "*"
+google-cloud-storage = "*"
+flask = "*"
+gunicorn = "*"
+google-cloud-bigquery = "*"
+pandas = "*"
+jupyter = "*"
 
 [dev-packages]
 
