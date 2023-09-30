@@ -1,0 +1,20 @@
+# Still a work in progress
+# name: cd_infrastructure
+
+# on:
+#   push:
+#     branches: [ main ]
+#     paths:
+#       - "infrastructure/**"
+#   workflow_dispatch:
+
+# jobs:
+#   cd:
+#     name: Deployment - infrastructure
+#     runs-on: ubuntu-22.04
+
+#     steps:
+#       - name: Source code - checkout
+#         uses: actions/checkout@v3
+
+      
