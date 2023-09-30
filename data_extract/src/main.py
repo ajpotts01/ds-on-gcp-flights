@@ -1,5 +1,7 @@
+import argparse
 import os
 import shutil
+import sys
 import tempfile
 
 from dotenv import load_dotenv
@@ -8,15 +10,47 @@ from google.cloud import bigquery
 from util import bq_schema, downloads, files, gcp
 
 
-def main() -> bigquery.Table:
+def args(argv: list[str]) -> argparse.Namespace:
+    args: argparse.Namespace = None
+
+    parser: argparse.ArgumentParser = argparse.ArgumentParser(
+        description="Ingest flight data from BTS website to GCS/Bigquery"
+    )
+    parser.add_argument("--bucket", help="Target GCS bucket", required=False)
+    parser.add_argument(
+        "--year", help="Year to search for. Example: 2015", required=True
+    )
+    parser.add_argument(
+        "--month",
+        help="Month to search for - without leading zeroes. e.g. 1, 2, 10, etc.",
+        required=True,
+    )
+
+    try:
+        args = parser.parse_args(args=argv)
+    except Exception as ex:
+        print(f"Error parsing arguments: {ex}")
+        args = None
+    finally:
+        return args
+
+
+def main(args: argparse.Namespace) -> bigquery.Table:
     load_dotenv()
     table: bigquery.Table = None
-    target_bucket: str = os.getenv("BUCKET", None)
+    target_bucket: str 
     target_project: str = os.getenv("PROJECT", None)
     target_dataset: str = os.getenv("DATASET", None)
     target_gcs_folder: str = "flights/raw"
-    year: int = 2015
-    month: int = 1
+    year: int = int(args.year)
+    month: int = int(args.month)
+
+    if args.bucket is not None:
+        target_bucket = args.bucket
+    else:
+        target_bucket = os.getenv("BUCKET", None)
+
+    print(f"{target_bucket=}")
 
     try:
         temp_dir: str = tempfile.mkdtemp(prefix="ingest_flights")
@@ -50,9 +84,14 @@ def main() -> bigquery.Table:
         return table
 
 
-if __name__ == "__main__":
-    table: bigquery.Table = main()
-    if table:
-        print(
-            f"Successfully uploaded file and loaded to BigQuery. Table is {table.table_id}"
-        )
+if __name__ == "__main__":    
+    cli_args: argparse.Namespace = args(sys.argv[1:])
+
+    if cli_args:
+        table: bigquery.Table = main(args=cli_args)
+        if table:
+            print(
+                f"Successfully uploaded file and loaded to BigQuery. Table is {table.table_id}"
+            )
+    else:
+        print("Command line arguments are required.")
