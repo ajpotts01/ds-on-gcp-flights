@@ -72,7 +72,7 @@ def load_to_gcs(source_file: str, bucket_name: str) -> str:
     client: storage.Client = storage.Client()
     bucket: storage.Bucket = client.get_bucket(bucket_or_name=bucket_name)
     blob: storage.Blob = storage.Blob(name=base_file_name, bucket=bucket)
-    blob.upload_from_file(file_obj=source_file)
+    blob.upload_from_filename(filename=source_file)
 
     return f"gs://{bucket_name}/{base_file_name}"
 
@@ -92,8 +92,9 @@ def main() -> str:
     )
     gcs_path: str = load_to_gcs(source_file=gzip_path, bucket_name=target_bucket)
 
-    print(gcs_path)
+    return gcs_path
 
 
 if __name__ == "__main__":
     result: str = main()
+    print(f"File extracted and uploaded to {result}")
