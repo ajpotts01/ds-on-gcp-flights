@@ -26,11 +26,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pipenv==2023.8.23
-          pipenv install
-          pipenv shell
+          cd data_extract
+          pipenv install --system
       
       - name: Black - code formatting rules
-        run: black --check --verbose --diff --color data_extract/
+        run: black --check --verbose --diff --color .
 
       - name: Unit/integration tests
         run: |
