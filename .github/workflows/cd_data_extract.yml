@@ -60,7 +60,7 @@ jobs:
           --platform=managed --timeout 12m
 
       - name: Deployment - create scheduler
-        bash: |
+        run: |
           echo {\"bucket\":\"${{ env.gcp_ingestion_bucket }}\"\} > /tmp/message
           URL=$(gcloud run services describe ${{ env.gcp_gcr_name }} --format='value(status.url)' --region=${{ env.gcp_region }})
           SCHED=$(gcloud scheduler jobs describe ${{ env.gcp_gcr_name }} --location=australia-southeast1 || echo "NOT_FOUND")
