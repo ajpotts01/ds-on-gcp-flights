@@ -16,6 +16,12 @@ resource "google_project_iam_member" "cloud_run_invoker_binding" {
   member  = "serviceAccount:${google_service_account.ingestion_service_account.email}"
 }
 
+resource "google_project_iam_member" "cloud_scheduler_viewer_binding" {
+  project = var.project_id
+  role    = "roles/cloudscheduler.viewer"
+  member  = "serviceAccount:${google_service_account.ingestion_service_account.email}"
+}
+
 resource "google_project_iam_member" "cloud_run_developer_binding" {
   project = var.project_id
   role    = "roles/run.developer"
