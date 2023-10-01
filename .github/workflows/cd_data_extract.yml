@@ -14,6 +14,7 @@ env:
   gcp_sa_name: ${{ secrets.GCP_SA_NAME }}
   gcp_gcr_name: ${{ secrets.GCP_GCR_NAME }}
   gcp_region: ${{ secrets.GCP_REGION }}
+  gcp_ingestion_bucket: ${{ secrets.GCP_INGEST_BUCKET }}
 
 jobs:
   cd:
@@ -57,5 +58,32 @@ jobs:
           --region=${{ env.gcp_region }} \
           --no-allow-unauthenticated \
           --platform=managed --timeout 12m
+
+      - name: Deployment - create scheduler
+        run: |
+          echo {\"bucket\":\"${{ env.gcp_ingestion_bucket }}\"\} > /tmp/message
+          url=$(gcloud run services describe ${{ env.gcp_gcr_name}} --format='value(status.url)' --region=${{ env.gcp_region }})
+          if [ "$sched" = "NOT_FOUND" ]; then
+            action="create"
+          else
+            action="update"
+          fi
+
+          sched=$(gcloud scheduler jobs describe ${{ env.gcp_gcr_name }} --region=australia-southeast1 || echo "NOT_FOUND")
+          gcloud scheduler jobs $(action) http ${{ env.gcp_gcr_name }} \
+          --location=${{ env.gcp_region }} \
+          --schedule="8 of month 10:00" \
+          --time-zone "Australia/Sydney" \
+          --description "Ingest flights using Cloud Run" \
+          --url=$url \
+          --http-method POST \
+          --oidc-service-account-email ${{ env.gcp_sa_name }} \
+          --oidc-token-audience=$(url) \
+          --max-backoff=7d \
+          --max-retry-attempts=5 \
+          --max-retry-duration=2d \
+          --min-backoff=12h \
+          --headers="Content-Type=application/json" \
+          --message-body-from-file=/tmp/message
 
 
