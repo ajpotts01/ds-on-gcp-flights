@@ -16,6 +16,9 @@ resource "google_storage_bucket" "cloud_build_storage" {
   uniform_bucket_level_access = true
   public_access_prevention    = "enforced"
   force_destroy               = true
+  retention_policy {
+    retention_period = 86400
+  }
 }
 
 resource "google_storage_bucket" "flights_ingestion" {
