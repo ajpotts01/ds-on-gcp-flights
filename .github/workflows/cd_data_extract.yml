@@ -60,22 +60,22 @@ jobs:
           --platform=managed --timeout 12m
 
       - name: Deployment - create scheduler
-        run: |
+        bash: |
           echo {\"bucket\":\"${{ env.gcp_ingestion_bucket }}\"\} > /tmp/message
-          url=$(gcloud run services describe ${{ env.gcp_gcr_name }} --format='value(status.url)' --region=${{ env.gcp_region }})
-          sched=$(gcloud scheduler jobs describe ${{ env.gcp_gcr_name }} --location=australia-southeast1 || echo "NOT_FOUND")
-          if [ "$sched" = "NOT_FOUND" ]; then
-            action="create"
+          URL=$(gcloud run services describe ${{ env.gcp_gcr_name }} --format='value(status.url)' --region=${{ env.gcp_region }})
+          SCHED=$(gcloud scheduler jobs describe ${{ env.gcp_gcr_name }} --location=australia-southeast1 || echo "NOT_FOUND")
+          if [ "$SCHED" = "NOT_FOUND" ]; then
+            ACTION="create"
           else
-            action="update"
+            ACTION="update"
           fi
 
-          gcloud scheduler jobs "$action" http ${{ env.gcp_gcr_name }} \
+          gcloud scheduler jobs $ACTION http ${{ env.gcp_gcr_name }} \
           --location=${{ env.gcp_region }} \
           --schedule="8 of month 10:00" \
           --time-zone "Australia/Sydney" \
           --description "Ingest flights using Cloud Run" \
-          --uri="$url" \
+          --uri=$URL \
           --http-method POST \
           --oidc-service-account-email ${{ env.gcp_sa_name }} \
           --oidc-token-audience=$(url) \
