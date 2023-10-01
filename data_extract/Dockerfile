@@ -7,8 +7,8 @@ COPY Pipfile.lock /tmp/
 
 RUN apt-get update && apt-get install -y wget
 RUN apt-get install -y python3.9
-RUN python -m pip install --trusted-host pypi.python.org pipenv
-RUN python -m pipenv install
+RUN python3.9 -m pip install --trusted-host pypi.python.org pipenv
+RUN python3.9 -m pipenv install
 
 ENV ENV=PROD
 
