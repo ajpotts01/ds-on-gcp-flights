@@ -69,13 +69,13 @@ jobs:
             action="update"
           fi
 
-          sched=$(gcloud scheduler jobs describe ${{ env.gcp_gcr_name }} --region=australia-southeast1 || echo "NOT_FOUND")
+          sched=$(gcloud scheduler jobs describe ${{ env.gcp_gcr_name }} --location=australia-southeast1 || echo "NOT_FOUND")
           gcloud scheduler jobs "$action" http ${{ env.gcp_gcr_name }} \
           --location=${{ env.gcp_region }} \
           --schedule="8 of month 10:00" \
           --time-zone "Australia/Sydney" \
           --description "Ingest flights using Cloud Run" \
-          --url="$url" \
+          --uri="$url" \
           --http-method POST \
           --oidc-service-account-email ${{ env.gcp_sa_name }} \
           --oidc-token-audience=$(url) \
