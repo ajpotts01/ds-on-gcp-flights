@@ -17,4 +17,5 @@ WORKDIR /home/app
 USER app
 
 COPY ./src .
+RUN chmod +x ./start_server.sh
 CMD ./start_server.sh
