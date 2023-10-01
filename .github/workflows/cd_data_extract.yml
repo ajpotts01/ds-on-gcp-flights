@@ -63,13 +63,13 @@ jobs:
         run: |
           echo {\"bucket\":\"${{ env.gcp_ingestion_bucket }}\"\} > /tmp/message
           url=$(gcloud run services describe ${{ env.gcp_gcr_name }} --format='value(status.url)' --region=${{ env.gcp_region }})
+          sched=$(gcloud scheduler jobs describe ${{ env.gcp_gcr_name }} --location=australia-southeast1 || echo "NOT_FOUND")
           if [ "$sched" = "NOT_FOUND" ]; then
             action="create"
           else
             action="update"
           fi
 
-          sched=$(gcloud scheduler jobs describe ${{ env.gcp_gcr_name }} --location=australia-southeast1 || echo "NOT_FOUND")
           gcloud scheduler jobs "$action" http ${{ env.gcp_gcr_name }} \
           --location=${{ env.gcp_region }} \
           --schedule="8 of month 10:00" \
