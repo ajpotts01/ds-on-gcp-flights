@@ -11,6 +11,7 @@ on:
 env:
   gcp_project: ${{ secrets.GCP_PROJECT }}
   gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+  gcp_sa_name: ${{ secrets.GCP_SA_NAME }}
   gcp_gcr_name: ${{ secrets.GCP_GCR_NAME }}
   gcp_region: ${{ secrets.GCP_REGION }}
 
