@@ -70,20 +70,8 @@ jobs:
             ACTION="update"
           fi
 
-          gcloud scheduler jobs $ACTION http ${{ env.gcp_gcr_name }} \
-          --location=${{ env.gcp_region }} \
-          --schedule="8 of month 10:00" \
-          --time-zone "Australia/Sydney" \
-          --description "Ingest flights using Cloud Run" \
-          --uri=$URL \
-          --http-method POST \
-          --oidc-service-account-email ${{ env.gcp_sa_name }} \
-          --oidc-token-audience=$(url) \
-          --max-backoff=7d \
-          --max-retry-attempts=5 \
-          --max-retry-duration=2d \
-          --min-backoff=12h \
-          --headers="Content-Type=application/json" \
-          --message-body-from-file=/tmp/message
+          echo $URL
+          echo $SCHED
+          echo $ACTION
 
 
