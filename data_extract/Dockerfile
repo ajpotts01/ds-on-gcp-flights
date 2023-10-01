@@ -14,8 +14,8 @@ EXPOSE 8080
 
 RUN useradd --create-home app
 WORKDIR /home/app
-USER app
 
 COPY ./src .
 RUN chmod +x ./start_server.sh
+USER app
 CMD ./start_server.sh
