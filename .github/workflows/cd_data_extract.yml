@@ -80,7 +80,7 @@ jobs:
           --uri=$URL \
           --http-method POST \
           --oidc-service-account-email ${{ env.gcp_sa_name }} \
-          --oidc-token-audience=$(url) \
+          --oidc-token-audience=$URL \
           --max-backoff=7d \
           --max-retry-attempts=5 \
           --max-retry-duration=2d \
