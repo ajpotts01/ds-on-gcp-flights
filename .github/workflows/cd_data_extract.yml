@@ -45,7 +45,7 @@ jobs:
           --region=${{ env.gcp_region }} \
           -t gcr.io/${{ env.gcp_project }}/${{ env.gcp_gcr_name }} \
           --gcs-log-dir gs://${{ env.gcp_project }}-cloud-build-logs \
-          --gcs-storage-dir gs://${{ env.gcp_project }}_cloudbuild/source
+          --gcs-storage-dir gs://${{ env.gcp_project }}_cloudbuild/source \
           .
       
       - name: Deployment - submit to Cloud Run
