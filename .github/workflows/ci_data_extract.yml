@@ -25,8 +25,9 @@ jobs:
       - name: Python - dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pipenv==2023.3.18
-          pipenv install --system
+          pip install pipenv==2023.8.23
+          pipenv install
+          pipenv shell
       
       - name: Black - code formatting rules
         run: black --check --verbose --diff --color data_extract/
