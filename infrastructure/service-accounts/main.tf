@@ -9,3 +9,7 @@ resource "google_project_iam_member" "cloud_run_invoker_binding" {
   role    = "roles/run.invoker"
   member  = "serviceAccount:${google_service_account.ingestion_service_account.email}"
 }
+
+output "ingestion_service_account_email" {
+  value = google_service_account.ingestion_service_account.email
+}

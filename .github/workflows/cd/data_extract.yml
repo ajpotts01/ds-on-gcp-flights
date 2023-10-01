@@ -1,0 +1,60 @@
+name: cd_data_extract
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "data_extract/**"
+  workflow_dispatch:  
+
+# TODO: Consider workload identity federation
+env:
+  gcp_project: ${{ secrets.GCP_PROJECT }}
+  gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+  gcp_sa_name: ${{ secrets.GCP_SA_NAME }}
+  gcp_gcr_name: ${{ secrets.GCP_GCR_NAME }}
+  gcp_region: ${{ secrets.GCP_REGION }}
+
+jobs:
+  cd:
+    runs-on: ubuntu-22.04
+    
+  steps:
+    - name: Source code - checkout
+      uses: actions/checkout@v3
+
+    - name: Deployment - activate service account
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ env.gcp_sa_key }}
+
+    - name: Deployment - Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        version: ">= 363.0.0"
+
+    - name: Deployment - configure Docker
+      run: |
+        gcloud config set project ${{ env.gcp_project }}
+        gcloud auth configure-docker
+    
+    - name: Deployment - submit to Cloud Build
+      run: |
+        cd data_extract/
+        gcloud builds submit \
+        --region=${{ env.gcp_region }} \
+        -t gcr.io/${{ env.gcp_project }}/${{ env.gcp_gcr_name }} \
+        --gcs-log-dir gs://${{ env.gcp_project }}-cloud-build-logs \
+        .
+    
+    - name: Deployment - submit to Cloud Run
+      run: |
+        gcloud run deploy \
+        ${{ env.gcp_gcr_name }} \
+        --image=gcr.io/${{ env.gcp_project }}/${{ env.gcp_gcr_name }} \
+        --service-account=${{ env.gcp_sa_name }} \
+        --region=${{ env.gcp_region }} \
+        --no-allow-unauthenticated \
+        --platform=managed --timeout 12m
+
+
