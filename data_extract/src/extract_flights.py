@@ -39,6 +39,7 @@ def args(argv: list[str]) -> argparse.Namespace:
 
 
 def handle_defaults(year: str, month: str, bucket: str) -> Tuple[str, str, str]:
+    load_dotenv()
     target_bucket: str
     target_year: str
     target_month: str
@@ -46,6 +47,8 @@ def handle_defaults(year: str, month: str, bucket: str) -> Tuple[str, str, str]:
 
     if bucket is None:
         target_bucket = os.getenv("BUCKET", None)
+    else:
+        target_bucket = bucket
 
     if year is not None and month is not None:
         target_year = year
@@ -84,7 +87,6 @@ def cli_main(args: argparse.Namespace) -> bigquery.Table:
 def main(
     target_bucket: str, target_gcs_folder: str, year: str, month: str
 ) -> bigquery.Table:
-    load_dotenv()
     table: bigquery.Table = None
     target_project: str = os.getenv("PROJECT", None)
     target_dataset: str = os.getenv("DATASET", None)

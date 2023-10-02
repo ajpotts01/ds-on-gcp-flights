@@ -3,6 +3,8 @@
 data_extract/csv/
 data_extract/download/
 data_extract/gzip/
+creds.json
+docker_run.ps1
 
 # Terraform
 .terraform/

@@ -20,8 +20,8 @@ def load_to_bigquery(
     gcs_path: str, table_name: str, dataset: str, project: str
 ) -> bigquery.Table:
     client: bigquery.Client = bigquery.Client()
-    dataset: bigquery.Dataset = client.create_dataset(dataset=dataset, exists_ok=True)
-    table_name_full: str = f"{project}.{dataset.dataset_id}.{table_name}"
+    # Dataset managed by Terraform, not here.
+    table_name_full: str = f"{project}.{dataset}.{table_name}"
 
     job_config: bigquery.LoadJobConfig = bigquery.LoadJobConfig(
         schema=bq_schema.get_flights_raw_schema(),
