@@ -1,3 +1,8 @@
+resource "google_bigquery_dataset" "dsongcp_dataset" {
+    project = var.project_id
+    dataset_id = "dsongcp"
+}
+
 resource "google_bigquery_dataset_iam_member" "ingestion_service_account_bq_dataset" {
   project    = var.project_id
   dataset_id = "dsongcp"
