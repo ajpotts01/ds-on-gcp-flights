@@ -57,7 +57,8 @@ jobs:
           --service-account=${{ env.gcp_sa_name }} \
           --region=${{ env.gcp_region }} \
           --no-allow-unauthenticated \
-          --platform=managed --timeout 12m
+          --platform=managed --timeout 12m \
+          --set-env-vars PROJECT="${{ env.gcp_project }}",DATASET="dsongcp"
 
       - name: Deployment - create scheduler
         run: |
