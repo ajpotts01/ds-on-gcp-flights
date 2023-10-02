@@ -24,7 +24,7 @@ def download_file(year: str, month: str, target_dir: str) -> str:
 
     env: str = os.getenv("ENV", "DEV")
     verify_ssl: bool = (
-        True  # Used to be env == PROD, but turns out that doesn't work on GCR either.
+        False  # Used to be env == PROD, but turns out that doesn't work on GCR either.
     )
 
     if not os.path.exists(target_dir):
