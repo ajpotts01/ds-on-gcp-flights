@@ -23,7 +23,9 @@ def download_file(year: str, month: str, target_dir: str) -> str:
     target_filename: str = f"{target_dir}/{year}_{month_padded}.zip"
 
     env: str = os.getenv("ENV", "DEV")
-    verify_ssl: bool = env == "PROD"
+    verify_ssl: bool = (
+        True  # Used to be env == PROD, but turns out that doesn't work on GCR either.
+    )
 
     if not os.path.exists(target_dir):
         os.mkdir(target_dir)
