@@ -1,3 +1,4 @@
+import logging
 import os
 import requests
 import ssl
@@ -28,11 +29,11 @@ def download_file(year: str, month: str, target_dir: str) -> str:
         os.mkdir(target_dir)
 
     with open(file=target_filename, mode="wb") as target_file:
-        print(f"Requesting from: {target_url}")
+        logging.info(f"Requesting from: {target_url}")
         # Note: even a 20mb file takes a while to download from this site
         response: requests.Response = requests.get(url=target_url, verify=verify_ssl)
-        print("Writing file")
+        logging.info("Writing file")
         target_file.write(response.content)
-        print("Done")
+        logging.info("Done")
 
     return target_filename
