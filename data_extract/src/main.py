@@ -2,14 +2,16 @@ import logging
 
 from extract_flights import main, handle_defaults
 
-from flask import escape, Flask, Request
+from flask import escape, Flask, request
 from google.cloud import bigquery
 
 app: Flask = Flask(__name__)
 
 
+# Note this differs from the book:
+# Adding "request" as a param in the function signature does not work anymore.
 @app.route("/", methods=["POST"])
-def extract_flights(request: Request) -> bigquery.Table:
+def extract_flights() -> str:
     try:
         target_bucket: str
         target_year: str
