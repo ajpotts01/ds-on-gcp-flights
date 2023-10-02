@@ -2,9 +2,10 @@ import logging
 import os
 from extract_flights import main, handle_defaults
 
+from flask import Flask, request
 import google.cloud.logging
-from flask import escape, Flask, request
 from google.cloud import bigquery
+from markupsafe import escape
 
 app: Flask = Flask(__name__)
 
