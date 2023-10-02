@@ -12,7 +12,8 @@ app: Flask = Flask(__name__)
 def setup_gcp_logging():
     if os.getenv("ENV", "DEV") == "PROD":
         client: google.cloud.logging.Client = google.cloud.logging.Client()
-        client.setup_logging() # This will hook in with all stdlib logging calls from here on
+        client.setup_logging()  # This will hook in with all stdlib logging calls from here on
+
 
 # Note this differs from the book:
 # Adding "request" as a param in the function signature does not work anymore.

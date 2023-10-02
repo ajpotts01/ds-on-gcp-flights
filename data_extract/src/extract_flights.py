@@ -13,7 +13,6 @@ from google.cloud import bigquery
 from util import bq_schema, downloads, files, gcp, dates
 
 
-
 def args(argv: list[str]) -> argparse.Namespace:
     args: argparse.Namespace = None
 
