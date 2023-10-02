@@ -12,6 +12,7 @@ google-cloud-storage = "*"
 flask = "*"
 gunicorn = "*"
 google-cloud-bigquery = "*"
+google-cloud-logging = "*"
 
 [dev-packages]
 
