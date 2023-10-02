@@ -1,5 +1,5 @@
 import logging
-
+import os
 from extract_flights import main, handle_defaults
 
 from flask import escape, Flask, request
@@ -18,13 +18,14 @@ def extract_flights() -> str:
         target_month: str
 
         request_json: dict = request.get_json()
+        logging.info("Logging started")
+        logging.info(request)
+        logging.info(f"{request_json=}")
 
-        year: str = escape(s=request_json["year"]) if "year" in request_json else None
-        month: str = (
-            escape(s=request_json["month"]) if "month" in request_json else None
-        )
+        year: str = escape(request_json["year"]) if "year" in request_json else None
+        month: str = escape(request_json["month"]) if "month" in request_json else None
         bucket: str = (
-            escape(s=request_json["bucket"]) if "year" in request_json else None
+            escape(request_json["bucket"]) if "bucket" in request_json else None
         )
         target_gcs_folder: str = "flights/raw"
         table: bigquery.Table = None
