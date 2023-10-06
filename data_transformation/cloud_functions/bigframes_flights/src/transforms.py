@@ -46,24 +46,28 @@ def get_map_bool() -> dict[str, bool]:
         "0.00": False,
     }
 
+
 def get_columns_bool() -> list[str]:
-    return [
-        "cancelled",
-        "diverted"
-    ]
+    return ["cancelled", "diverted"]
+
 
 def map_columns(df_target: bpd.DataFrame, map: dict[str, str]) -> None:
     df_target = df_target[map.keys()].rename(columns=map)
 
-def map_bools(df_target: bpd.DataFrame, columns: list[str], map: dict[str, bool]) -> None:
+
+def map_bools(
+    df_target: bpd.DataFrame, columns: list[str], map: dict[str, bool]
+) -> None:
     for col in columns:
         df_target[col] = df_target[col].map(map)
+
 
 def map_floats(df_target: bpd.DataFrame, columns: list[str]) -> None:
     for col in columns:
         # Note: although it is tempting to use the static Dtypes
         # they actually don't work. Type conflicts.
         df_target[col] = df_target[col].astype("Float64")
+
 
 def run_transforms(df_raw: bpd.DataFrame) -> bpd.DataFrame:
     df_transformed: bpd.DataFrame = df_raw.copy()
@@ -84,7 +88,3 @@ def main():
     df_flights_raw: bpd.DataFrame = bpd.read_gbq(query=table_source)
     df_flights_transformed: bpd.DataFrame = run_transforms(df_raw=df_flights_raw)
     df_flights_transformed.to_gbq(table_target, if_exists="replace")
-
-    
-
-
