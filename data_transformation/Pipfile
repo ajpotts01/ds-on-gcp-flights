@@ -12,6 +12,8 @@ jupyter = "*"
 functions-framework = "*"
 flask = "*"
 pytest = "*"
+pydotenv = "*"
+python-dotenv = "*"
 
 [dev-packages]
 
