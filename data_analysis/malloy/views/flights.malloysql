@@ -1,6 +1,8 @@
 >>>malloy
+
 import "../models/flights.malloy"
 >>>sql
+
 -- connection:bigquery
 create or replace view dsongcp.arrival_delays as %{
     flights -> arrival_delays

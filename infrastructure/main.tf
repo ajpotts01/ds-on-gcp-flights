@@ -21,6 +21,8 @@ module "storage-buckets" {
 module "bigquery" {
   source                          = "./bigquery"
   project_id                      = var.project_id
+  region                          = var.region
   ingestion_service_account_email = module.service-accounts.ingestion_service_account_email
+  ingestion_storage_bucket_uri    = module.storage-buckets.ingestion_storage_bucket_uri
   depends_on                      = [module.service-accounts]
 }
