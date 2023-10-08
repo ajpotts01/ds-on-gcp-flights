@@ -1,0 +1,63 @@
+
+source: flights is bigquery.table("dsongcp.flights") extend {
+    join_cross: cancellation_thresholds is bigquery.sql(""" 
+        select
+            threshold
+        from
+            unnest([5, 10, 11, 12, 13, 15, 20]) as threshold
+    """)
+    measure: num_flights is count()
+    dimension: is_late is arr_delay ?
+                            pick 'ON TIME' when < 15
+                            else 'LATE'
+               carrier is unique_carrier
+
+    view: busiest_airports is {
+        group_by: origin
+        aggregate: num_flights
+        limit: 5
+    }
+
+    view: cancellation_matrix is {
+        group_by: cancellation_thresholds.threshold
+        aggregate:
+            true_positives is num_flights { 
+                where: dep_delay < cancellation_thresholds.threshold and arr_delay < 15 
+            }
+            false_positives is num_flights { 
+                where: dep_delay < cancellation_thresholds.threshold and arr_delay >= 15 
+            }
+            false_negatives is num_flights { 
+                where: dep_delay >= cancellation_thresholds.threshold and arr_delay < 15 
+            }
+            true_negatives is num_flights { 
+                where: dep_delay >= cancellation_thresholds.threshold and arr_delay >= 15 
+            }
+            total is num_flights
+        order_by: 1
+        where: 
+            dep_delay != null and arr_delay != null
+    }
+
+    view: arrival_delays is {
+        aggregate: num_flights
+        group_by: is_late         
+    }
+
+    view: delays_by_carrier is {
+        group_by: carrier
+        aggregate: avg_arr_delay is avg(arr_delay)
+                   avg_dep_delay is avg(dep_delay)
+    }
+}
+
+
+-- run: flights -> {
+--   group_by: cancellation_thresholds.value
+--   aggregate: true_pos is num_flights {where: dep_delay < cancellation_thresholds.value and arr_delay > 15}
+--   aggregate: false_pos is num_flights {where: dep_delay < cancellation_thresholds.value and arr_delay >= 15}
+--   order_by: value
+--   where:
+--     arr_delay != null and dep_delay != null
+-- }
+
