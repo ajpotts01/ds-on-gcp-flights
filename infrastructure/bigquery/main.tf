@@ -17,3 +17,11 @@ resource "google_project_iam_binding" "ingestion_service_account_bq_job" {
     "serviceAccount:${var.ingestion_service_account_email}"
   ]
 }
+
+resource "google_project_iam_binding" "ingestion_service_account_bq_edit" {
+  project = var.project_id
+  role    = "roles/bigquery.dataEditor"
+  members = [
+    "serviceAccount:${var.ingestion_service_account_email}"
+  ]
+}
