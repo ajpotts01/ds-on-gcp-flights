@@ -1,10 +1,10 @@
-name: cd_data_extract
+name: cd_ingest_flights
 
 on:
   push:
     branches: [ main ]
     paths:
-      - "data_extract/**"
+      - "data_extract/ingest_flights/**"
   workflow_dispatch:  
 
 # TODO: Consider workload identity federation
@@ -41,7 +41,7 @@ jobs:
       
       - name: Deployment - submit to Cloud Build
         run: |
-          cd data_extract/
+          cd data_extract/ingest_flights/
           gcloud builds submit \
           --region=${{ env.gcp_region }} \
           -t gcr.io/${{ env.gcp_project }}/${{ env.gcp_gcr_name }} \
