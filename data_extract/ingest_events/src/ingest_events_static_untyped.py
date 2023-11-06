@@ -11,14 +11,14 @@ from apache_beam.pvalue import PValue
 from apache_beam.transforms.combiners import Sample
 from pytz.tzinfo import StaticTzInfo
 
-DT_FORMAT: str = "%Y-%m-%d %H:%M:%S"
+DT_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-def get_next_event(fields: str) -> Generator[dict[str, str], None, None]:
+def get_next_event(fields):
     print("get_next_event")
-    json_fields: dict[str, str] = fields  # json.loads(fields)
+    json_fields = fields  # json.loads(fields)
 
     if len(json_fields["dep_time"]) > 0:
-        event: dict[str, str] = dict(json_fields)  # copy
+        event = dict(json_fields)  # copy
         event["event_type"] = "departed"
         event["event_time"] = json_fields["dep_time"]
         for field in [
@@ -34,14 +34,14 @@ def get_next_event(fields: str) -> Generator[dict[str, str], None, None]:
         yield event
 
     if len(json_fields["arr_time"]) > 0:
-        event: dict[str, str] = dict(json_fields)
+        event = dict(json_fields)
         event["event_type"] = "arrived"
         event["event_time"] = json_fields["arr_time"]
         yield event
 
     # This is in the book but not in the sample code?
     if len(json_fields["wheels_off"]) > 0:
-        event: dict[str, str] = dict(json_fields)
+        event = dict(json_fields)
         event["event_type"] = "wheels_off"
         event["event_time"] = json_fields["wheels_off"]
         for field in ["wheels_on", "taxi_in", "arr_time", "arr_delay", "distance"]:
@@ -49,36 +49,36 @@ def get_next_event(fields: str) -> Generator[dict[str, str], None, None]:
         yield event
 
 
-def correct_arrival_time(arrival_time: str, departure_time: str) -> str:
+def correct_arrival_time(arrival_time, departure_time):
     print("correct_arrival_time")
     if (
         len(arrival_time) > 0
         and len(departure_time) > 0
         and arrival_time < departure_time
     ):
-        arrival_dt: dt.datetime = dt.datetime.strptime(arrival_time, DT_FORMAT)
+        arrival_dt = dt.datetime.strptime(arrival_time, DT_FORMAT)
         arrival_dt += dt.timedelta(hours=24)
         return arrival_dt.strftime(DT_FORMAT)
     else:
         return arrival_time
 
 
-def test_time_zone(lat: str, lon: str) -> str:
+def test_time_zone(lat, lon):
     import timezonefinder
 
     print("test_time_zone")
 
-    tz: timezonefinder.TimezoneFinder = timezonefinder.TimezoneFinder()
+    tz = timezonefinder.TimezoneFinder()
     result = tz.timezone_at(lng=lon, lat=lat)
     print(f"{result=}")
 
 
-def convert_to_utc(date: str, time: str, time_zone: str) -> Tuple[str, float]:
+def convert_to_utc(date, time, time_zone):
     print("convert_to_utc")
     try:
         if len(time) > 0 and time_zone is not None:
-            local_timezone: StaticTzInfo = pytz.timezone(time_zone)
-            local_datetime: dt.datetime = local_timezone.localize(
+            local_timezone = pytz.timezone(time_zone)
+            local_datetime = local_timezone.localize(
                 #dt.datetime.combine(date, dt.datetime.min.time()), is_dst=False
                 dt.datetime.strptime(date, "%Y-%m-%d"), is_dst=False
             )
@@ -103,15 +103,15 @@ def convert_to_utc(date: str, time: str, time_zone: str) -> Tuple[str, float]:
 
 # Confirm data type...
 def correct_time_zone(
-    fields: dict[str, str], airport_timezones: dict[str, list[str]]
-) -> Generator[str, None, None]:
+    fields, airport_timezones
+):
     print("correct_time_zone")
     try:
-        airport_origin: str = fields["origin_airport_seq_id"]
-        airport_destination: str = fields["dest_airport_seq_id"]
+        airport_origin = fields["origin_airport_seq_id"]
+        airport_destination = fields["dest_airport_seq_id"]
 
-        timezone_origin: str = airport_timezones[airport_origin][2]  # ???
-        timezone_destination: str = airport_timezones[airport_destination][2]  # ???
+        timezone_origin = airport_timezones[airport_origin][2]  # ???
+        timezone_destination = airport_timezones[airport_destination][2]  # ???
 
         for field in ["crs_dep_time", "dep_time", "wheels_off"]:
             fields[field], departure_timezone = convert_to_utc(
@@ -140,14 +140,14 @@ def correct_time_zone(
         logging.exception("Unknown airport - skipping row")
 
 
-def add_time_zone(lat: str, lon: str) -> Tuple[float, float, str]:
-    result: Tuple[float, float, str] = ()
+def add_time_zone(lat, lon):
+    result = ()
     print("add_time_zone")
     try:
         import timezonefinder  # No top-level imports? Must be due to parallelization
 
-        tz_finder: timezonefinder.TimezoneFinder = timezonefinder.TimezoneFinder()
-        tz: str = tz_finder.timezone_at(lng=float(lon), lat=float(lat))
+        tz_finder = timezonefinder.TimezoneFinder()
+        tz = tz_finder.timezone_at(lng=float(lon), lat=float(lat))
 
         if tz is None:
             tz = "UTC"
@@ -173,12 +173,12 @@ def main():
     # The code in the public repo doesn't help much either. I suspect if one was to clone
     # and immediately run it, it wouldn't work out of the box.
     with beam.Pipeline("DirectRunner") as pipeline:
-        bucket: str = "ajp-ds-gcp-flights"
-        path_airports: str = f"gs://{bucket}/flights/airports/airports.csv.gz"
-        path_flights: str = f"gs://{bucket}/flights/tz_corrections/all_flights"
+        bucket = "ajp-ds-gcp-flights"
+        path_airports = f"gs://{bucket}/flights/airports/airports.csv.gz"
+        path_flights = f"gs://{bucket}/flights/tz_corrections/all_flights"
 
         print("Airports...")
-        airports: PValue = (
+        airports = (
             pipeline
             | "airports: read" >> beam.io.ReadFromText(path_airports)
             # The book just has the USA filter, but that means the header gets filtered out...
@@ -197,7 +197,7 @@ def main():
         )
 
         print("Flights...")
-        flights: PValue = (
+        flights = (
             pipeline
             | "flights: read"
             >> beam.io.ReadFromBigQuery(
