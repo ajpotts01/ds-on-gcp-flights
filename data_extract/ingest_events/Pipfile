@@ -6,7 +6,7 @@ name = "pypi"
 [packages]
 timezonefinder = "*"
 pytz = "*"
-apache-beam = {extras = ["gcp"], version = "*"}
+apache-beam = {extras = ["gcp"], version = "2.46.0"}
 black = "*"
 
 [dev-packages]

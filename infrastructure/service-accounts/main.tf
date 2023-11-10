@@ -34,6 +34,56 @@ resource "google_project_iam_member" "cloud_build_editor_binding" {
   member  = "serviceAccount:${google_service_account.ingestion_service_account.email}"
 }
 
+# Service account needs both Dataflow admin and Dataflow worker for some reason
+# https://cloud.google.com/dataflow/docs/concepts/access-control#example
+resource "google_project_iam_member" "dataflow_admin_binding" {
+  project = var.project_id
+  role    = "roles/dataflow.admin"
+  member  = "serviceAccount:${google_service_account.ingestion_service_account.email}"
+}
+
+resource "google_project_iam_member" "dataflow_worker_binding" {
+  project = var.project_id
+  role    = "roles/dataflow.worker"
+  member  = "serviceAccount:${google_service_account.ingestion_service_account.email}"
+}
+
+resource "google_project_iam_member" "compute_viewer_binding" {
+  project = var.project_id
+  role    = "roles/compute.viewer"
+  member  = "serviceAccount:${google_service_account.ingestion_service_account.email}"
+}
+
+resource "google_project_iam_member" "storage_object_binding" {
+  project = var.project_id
+  role    = "roles/storage.objectAdmin"
+  member  = "serviceAccount:${google_service_account.ingestion_service_account.email}"
+}
+
+resource "google_project_iam_member" "dataflow_compute_impersonate_token" {
+  project = var.project_id
+  role = "roles/iam.serviceAccountTokenCreator"
+  member = "serviceAccount:service-${var.project_number}@compute-system.iam.gserviceaccount.com"
+}
+
+resource "google_project_iam_member" "dataflow_compute_impersonate_user" {
+  project = var.project_id
+  role = "roles/iam.serviceAccountUser"
+  member = "serviceAccount:service-${var.project_number}@compute-system.iam.gserviceaccount.com"
+}
+
+resource "google_project_iam_member" "dataflow_service_impersonate_token" {
+  project = var.project_id
+  role = "roles/iam.serviceAccountTokenCreator"
+  member = "serviceAccount:service-${var.project_number}@dataflow-service-producer-prod.iam.gserviceaccount.com"
+}
+
+resource "google_project_iam_member" "dataflow_service_impersonate_user" {
+  project = var.project_id
+  role = "roles/iam.serviceAccountUser"
+  member = "serviceAccount:service-${var.project_number}@dataflow-service-producer-prod.iam.gserviceaccount.com"
+}
+
 output "ingestion_service_account_email" {
   value = google_service_account.ingestion_service_account.email
 }
