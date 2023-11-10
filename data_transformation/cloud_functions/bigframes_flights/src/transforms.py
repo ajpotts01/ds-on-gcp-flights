@@ -90,6 +90,8 @@ def run_transforms(df_raw: bpd.DataFrame) -> bpd.DataFrame:
     )
     df_transformed = map_floats(df_target=df_transformed, columns=get_columns_float())
 
+    
+
     return df_transformed
 
 
@@ -136,7 +138,9 @@ def main():
         cols=get_column_selection_map(), table_name=table_target
     )
 
-    df_flights_raw: bpd.DataFrame = bpd.read_gbq(query=table_source)
+    bpd.pandas.set_option("display.max_colwidth", None)
+
+    df_flights_raw: bpd.DataFrame = bpd.read_gbq(query_or_table=table_source)
     df_flights_transformed: bpd.DataFrame = run_transforms(df_raw=df_flights_raw)
 
     if table:

@@ -13,6 +13,7 @@ from pytz.tzinfo import StaticTzInfo
 
 DT_FORMAT: str = "%Y-%m-%d %H:%M:%S"
 
+
 def get_next_event(fields: str) -> Generator[dict[str, str], None, None]:
     print("get_next_event")
     json_fields: dict[str, str] = fields  # json.loads(fields)
@@ -79,8 +80,9 @@ def convert_to_utc(date: str, time: str, time_zone: str) -> Tuple[str, float]:
         if len(time) > 0 and time_zone is not None:
             local_timezone: StaticTzInfo = pytz.timezone(time_zone)
             local_datetime: dt.datetime = local_timezone.localize(
-                #dt.datetime.combine(date, dt.datetime.min.time()), is_dst=False
-                dt.datetime.strptime(date, "%Y-%m-%d"), is_dst=False
+                # dt.datetime.combine(date, dt.datetime.min.time()), is_dst=False
+                dt.datetime.strptime(date, "%Y-%m-%d"),
+                is_dst=False,
             )
             print(f"{type(local_datetime)=}")
             print(f"{local_datetime=}")
@@ -129,11 +131,11 @@ def correct_time_zone(
         fields["dep_airport_lat"] = airport_timezones[airport_origin][0]
         fields["dep_airport_lon"] = airport_timezones[airport_origin][1]
         fields["arr_airport_lat"] = airport_timezones[airport_destination][0]
-        fields["arr_airport_lon"] = airport_timezones[airport_destination][1]        
+        fields["arr_airport_lon"] = airport_timezones[airport_destination][1]
         fields["dep_airport_tzoffset"] = departure_timezone
         fields["arr_airport_tzoffset"] = arrival_timezone
         # Is this necessary?
-        #fields["flight_date"] = dt.datetime.strftime(fields["flight_date"], "%Y-%m-%d")
+        # fields["flight_date"] = dt.datetime.strftime(fields["flight_date"], "%Y-%m-%d")
         print("Yielding")
         yield fields
     except KeyError as ex:
@@ -183,9 +185,7 @@ def main():
             | "airports: read" >> beam.io.ReadFromText(path_airports)
             # The book just has the USA filter, but that means the header gets filtered out...
             | "airports: filter usa"
-            >> beam.Filter(
-                lambda line: "United States" in line
-            )
+            >> beam.Filter(lambda line: "United States" in line)
             | "airports: fields" >> beam.Map(lambda line: next(csv.reader([line])))
             | "airports: filter empty"
             >> beam.Filter(lambda fields: len(fields[21]) > 0)

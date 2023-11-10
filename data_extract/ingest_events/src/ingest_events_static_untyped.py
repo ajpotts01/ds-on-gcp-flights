@@ -13,6 +13,57 @@ from pytz.tzinfo import StaticTzInfo
 
 DT_FORMAT = "%Y-%m-%d %H:%M:%S"
 
+
+def create_event_row(fields):
+    row = dict(fields)
+    row["event_data"] = json.dumps(fields)
+    return row
+
+
+def get_events_schema():
+    return ",".join(
+        [
+            get_flights_schema(),
+            "event_type:STRING",
+            "event_time:TIMESTAMP",
+            "event_data:STRING",
+        ]
+    )
+
+
+def get_flights_schema():
+    return ",".join(
+        [
+            "flight_date:DATE",
+            "unique_carrier:STRING",
+            "origin_airport_seq_id:STRING",
+            "origin:STRING",
+            "dest_airport_seq_id:STRING",
+            "dest:STRING",
+            "crs_dep_time:TIMESTAMP",
+            "dep_time:TIMESTAMP",
+            "dep_delay:FLOAT",
+            "taxi_out:FLOAT",
+            "wheels_off:TIMESTAMP",
+            "wheels_on:TIMESTAMP",
+            "taxi_in:FLOAT",
+            "crs_arr_time:TIMESTAMP",
+            "arr_time:TIMESTAMP",
+            "arr_delay:FLOAT",
+            "cancelled:BOOLEAN",
+            "diverted:BOOLEAN",
+            "distance:FLOAT",
+            "dep_airport_lat:FLOAT",
+            "dep_airport_lon:FLOAT",
+            "dep_airport_tzoffset:FLOAT",
+            "arr_airport_lat:FLOAT",
+            "arr_airport_lon:FLOAT",
+            "arr_airport_tzoffset:FLOAT",
+            "year:STRING",
+        ]
+    )
+
+
 def get_next_event(fields):
     print("get_next_event")
     json_fields = fields  # json.loads(fields)
@@ -63,24 +114,15 @@ def correct_arrival_time(arrival_time, departure_time):
         return arrival_time
 
 
-def test_time_zone(lat, lon):
-    import timezonefinder
-
-    print("test_time_zone")
-
-    tz = timezonefinder.TimezoneFinder()
-    result = tz.timezone_at(lng=lon, lat=lat)
-    print(f"{result=}")
-
-
 def convert_to_utc(date, time, time_zone):
     print("convert_to_utc")
     try:
         if len(time) > 0 and time_zone is not None:
             local_timezone = pytz.timezone(time_zone)
             local_datetime = local_timezone.localize(
-                #dt.datetime.combine(date, dt.datetime.min.time()), is_dst=False
-                dt.datetime.strptime(date, "%Y-%m-%d"), is_dst=False
+                # dt.datetime.combine(date, dt.datetime.min.time()), is_dst=False
+                dt.datetime.strptime(date, "%Y-%m-%d"),
+                is_dst=False,
             )
             print(f"{type(local_datetime)=}")
             print(f"{local_datetime=}")
@@ -102,9 +144,7 @@ def convert_to_utc(date, time, time_zone):
 
 
 # Confirm data type...
-def correct_time_zone(
-    fields, airport_timezones
-):
+def correct_time_zone(fields, airport_timezones):
     print("correct_time_zone")
     try:
         airport_origin = fields["origin_airport_seq_id"]
@@ -129,11 +169,11 @@ def correct_time_zone(
         fields["dep_airport_lat"] = airport_timezones[airport_origin][0]
         fields["dep_airport_lon"] = airport_timezones[airport_origin][1]
         fields["arr_airport_lat"] = airport_timezones[airport_destination][0]
-        fields["arr_airport_lon"] = airport_timezones[airport_destination][1]        
+        fields["arr_airport_lon"] = airport_timezones[airport_destination][1]
         fields["dep_airport_tzoffset"] = departure_timezone
         fields["arr_airport_tzoffset"] = arrival_timezone
         # Is this necessary?
-        #fields["flight_date"] = dt.datetime.strftime(fields["flight_date"], "%Y-%m-%d")
+        # fields["flight_date"] = dt.datetime.strftime(fields["flight_date"], "%Y-%m-%d")
         print("Yielding")
         yield fields
     except KeyError as ex:
@@ -172,8 +212,24 @@ def main():
     # version of Beam.
     # The code in the public repo doesn't help much either. I suspect if one was to clone
     # and immediately run it, it wouldn't work out of the box.
-    with beam.Pipeline("DirectRunner") as pipeline:
-        bucket = "ajp-ds-gcp-flights"
+    project = "ajp-ds-gcp"
+    bucket = "ajp-ds-gcp-flights"
+    region = "australia-southeast1"
+
+    pipeline_args = [
+        f"--project={project}",
+        "--job_name=flight-events",
+        "--save_main_session",
+        f"--staging_location=gs://{bucket}/flights/staging/",
+        f"--temp_location=gs://{bucket}/flights/temp/",
+        "--setup_file=./setup.py",
+        "--max_num_workers=8",
+        f"--region={region}",
+        "--runner=DataflowRunner",
+        "--service_account_email=ds-gcp-ingestion@ajp-ds-gcp.iam.gserviceaccount.com"
+    ]
+
+    with beam.Pipeline(argv=pipeline_args) as pipeline:
         path_airports = f"gs://{bucket}/flights/airports/airports.csv.gz"
         path_flights = f"gs://{bucket}/flights/tz_corrections/all_flights"
 
@@ -183,9 +239,7 @@ def main():
             | "airports: read" >> beam.io.ReadFromText(path_airports)
             # The book just has the USA filter, but that means the header gets filtered out...
             | "airports: filter usa"
-            >> beam.Filter(
-                lambda line: "United States" in line
-            )
+            >> beam.Filter(lambda line: "United States" in line)
             | "airports: fields" >> beam.Map(lambda line: next(csv.reader([line])))
             | "airports: filter empty"
             >> beam.Filter(lambda fields: len(fields[21]) > 0)
@@ -203,26 +257,47 @@ def main():
             >> beam.io.ReadFromBigQuery(
                 query="SELECT * FROM dsongcp.flights_v WHERE rand() < 0.001",
                 use_standard_sql=True,
-                gcs_location=f"gs://{bucket}/flights/temp",
-                project="ajp-ds-gcp",
+                # gcs_location=f"gs://{bucket}/flights/temp",
+                # project="ajp-ds-gcp",
             )
             | "flights: tz correction"
             >> beam.FlatMap(correct_time_zone, beam.pvalue.AsDict(airports))
         )
 
+        flights_schema = get_flights_schema()
+
         print("Writing flights...")
         (
             flights
-            | "flights: json" >> beam.Map(lambda fields: json.dumps(fields))
-            | "flights: write" >> beam.io.WriteToText("all_flights")
+            # Trying removing json.dumps here
+            # The result indicates it's already JSON string by this point
+            # | "flights: json" >> beam.Map(lambda fields: json.dumps(fields))
+            | "flights: write to bq"
+            >> beam.io.WriteToBigQuery(
+                f"{project}:dsongcp.flights_tz_corrected",
+                schema=flights_schema,
+                write_disposition=beam.io.BigQueryDisposition.WRITE_TRUNCATE,
+                create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
+                # custom_gcs_temp_location=f"gs://{bucket}/flights/temp",
+                # project="ajp-ds-gcp",
+            )
+            # | "flights: write" >> beam.io.WriteToText(path_flights)
         )
+
+        events_schema = get_events_schema()
 
         print("Events...")
         events: PValue = flights | beam.FlatMap(get_next_event)
         (
             events
-            | "events: json" >> beam.Map(lambda fields: json.dumps(fields))
-            | "events: write" >> beam.io.WriteToText("all_events")
+            | "events: to_row" >> beam.Map(lambda fields: create_event_row(fields))
+            | "events: write"
+            >> beam.io.WriteToBigQuery(
+                f"{project}:dsongcp.flights_sim_events",
+                schema=events_schema,
+                write_disposition=beam.io.BigQueryDisposition.WRITE_TRUNCATE,
+                create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
+            )
         )
 
 

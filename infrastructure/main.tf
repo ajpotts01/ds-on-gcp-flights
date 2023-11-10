@@ -6,6 +6,7 @@ module "service-apis" {
 module "service-accounts" {
   source     = "./service-accounts"
   project_id = var.project_id
+  project_number = var.project_number
   depends_on = [module.service-apis]
 }
 
