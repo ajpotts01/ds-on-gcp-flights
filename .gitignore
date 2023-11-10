@@ -6,6 +6,7 @@ data_extract/gzip/
 creds.json
 docker_run.ps1
 node_modules/
+.vscode/
 
 # Terraform
 .terraform/

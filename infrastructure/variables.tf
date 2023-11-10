@@ -9,6 +9,6 @@ variable "region" {
 }
 
 variable "project_number" {
-  type = string
+  type        = string
   description = "Target project number"
 }

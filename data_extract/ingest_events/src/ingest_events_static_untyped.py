@@ -226,7 +226,7 @@ def main():
         "--max_num_workers=8",
         f"--region={region}",
         "--runner=DataflowRunner",
-        "--service_account_email=ds-gcp-ingestion@ajp-ds-gcp.iam.gserviceaccount.com"
+        "--service_account_email=ds-gcp-ingestion@ajp-ds-gcp.iam.gserviceaccount.com",
     ]
 
     with beam.Pipeline(argv=pipeline_args) as pipeline:
