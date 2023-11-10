@@ -35,12 +35,13 @@ import setuptools
 class build(_build):  # pylint: disable=invalid-name
     """A build command class that will be invoked during package install.
 
-  The package built using the current setup.py will be staged and later
-  installed in the worker using `pip install package'. This class will be
-  instantiated during install for this specific scenario and will trigger
-  running the custom commands specified.
-  """
-    sub_commands = _build.sub_commands + [('CustomCommands', None)]
+    The package built using the current setup.py will be staged and later
+    installed in the worker using `pip install package'. This class will be
+    instantiated during install for this specific scenario and will trigger
+    running the custom commands specified.
+    """
+
+    sub_commands = _build.sub_commands + [("CustomCommands", None)]
 
 
 # Some custom command to run during setup. The command is not essential for this
@@ -62,8 +63,7 @@ class build(_build):  # pylint: disable=invalid-name
 #
 # The output of custom commands (including failures) will be logged in the
 # worker-startup log.
-CUSTOM_COMMANDS = [
-]
+CUSTOM_COMMANDS = []
 
 
 class CustomCommands(setuptools.Command):
@@ -76,17 +76,21 @@ class CustomCommands(setuptools.Command):
         pass
 
     def RunCustomCommand(self, command_list):
-        print('Running command: %s' % command_list)
+        print("Running command: %s" % command_list)
         p = subprocess.Popen(
             command_list,
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
         # Can use communicate(input='y\n'.encode()) if the command run requires
         # some confirmation.
         stdout_data, _ = p.communicate()
-        print('Command output: %s' % stdout_data)
+        print("Command output: %s" % stdout_data)
         if p.returncode != 0:
             raise RuntimeError(
-                'Command %s failed: exit code: %s' % (command_list, p.returncode))
+                "Command %s failed: exit code: %s" % (command_list, p.returncode)
+            )
 
     def run(self):
         for command in CUSTOM_COMMANDS:
@@ -97,21 +101,18 @@ class CustomCommands(setuptools.Command):
 # Note that the Python Dataflow containers come with numpy already installed
 # so this dependency will not trigger anything to be installed unless a version
 # restriction is specified.
-REQUIRED_PACKAGES = [
-    'timezonefinder',
-    'pytz'
-]
+REQUIRED_PACKAGES = ["timezonefinder", "pytz"]
 
 setuptools.setup(
-    name='flightsdf',
-    version='0.0.1',
-    description='Data Science on GCP flights analysis pipelines',
+    name="flightsdf",
+    version="0.0.1",
+    description="Data Science on GCP flights analysis pipelines",
     install_requires=REQUIRED_PACKAGES,
     packages=setuptools.find_packages(),
-    py_modules=['ingest_events_static_untyped'],
+    py_modules=["ingest_events_static_untyped"],
     cmdclass={
         # Command class instantiated and run during pip install scenarios.
-        'build': build,
-        'CustomCommands': CustomCommands,
-    }
+        "build": build,
+        "CustomCommands": CustomCommands,
+    },
 )

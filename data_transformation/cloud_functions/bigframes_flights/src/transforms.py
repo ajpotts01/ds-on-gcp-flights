@@ -90,8 +90,6 @@ def run_transforms(df_raw: bpd.DataFrame) -> bpd.DataFrame:
     )
     df_transformed = map_floats(df_target=df_transformed, columns=get_columns_float())
 
-    
-
     return df_transformed
 
 
@@ -115,7 +113,7 @@ def create_new_table(cols: dict[str, str], table_name: str):
 
     # Weird workaround. Can't do truncate table...
     table: bigquery.Table = bigquery.Table(full_table_name, schema=schema)
-    
+
     bq_client.delete_table(table=table, not_found_ok=True)
     table.time_partitioning = bigquery.TimePartitioning(
         type_=bigquery.TimePartitioningType.DAY, field="flight_date"

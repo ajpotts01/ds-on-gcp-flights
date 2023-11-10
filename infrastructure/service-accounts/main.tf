@@ -62,26 +62,26 @@ resource "google_project_iam_member" "storage_object_binding" {
 
 resource "google_project_iam_member" "dataflow_compute_impersonate_token" {
   project = var.project_id
-  role = "roles/iam.serviceAccountTokenCreator"
-  member = "serviceAccount:service-${var.project_number}@compute-system.iam.gserviceaccount.com"
+  role    = "roles/iam.serviceAccountTokenCreator"
+  member  = "serviceAccount:service-${var.project_number}@compute-system.iam.gserviceaccount.com"
 }
 
 resource "google_project_iam_member" "dataflow_compute_impersonate_user" {
   project = var.project_id
-  role = "roles/iam.serviceAccountUser"
-  member = "serviceAccount:service-${var.project_number}@compute-system.iam.gserviceaccount.com"
+  role    = "roles/iam.serviceAccountUser"
+  member  = "serviceAccount:service-${var.project_number}@compute-system.iam.gserviceaccount.com"
 }
 
 resource "google_project_iam_member" "dataflow_service_impersonate_token" {
   project = var.project_id
-  role = "roles/iam.serviceAccountTokenCreator"
-  member = "serviceAccount:service-${var.project_number}@dataflow-service-producer-prod.iam.gserviceaccount.com"
+  role    = "roles/iam.serviceAccountTokenCreator"
+  member  = "serviceAccount:service-${var.project_number}@dataflow-service-producer-prod.iam.gserviceaccount.com"
 }
 
 resource "google_project_iam_member" "dataflow_service_impersonate_user" {
   project = var.project_id
-  role = "roles/iam.serviceAccountUser"
-  member = "serviceAccount:service-${var.project_number}@dataflow-service-producer-prod.iam.gserviceaccount.com"
+  role    = "roles/iam.serviceAccountUser"
+  member  = "serviceAccount:service-${var.project_number}@dataflow-service-producer-prod.iam.gserviceaccount.com"
 }
 
 output "ingestion_service_account_email" {
