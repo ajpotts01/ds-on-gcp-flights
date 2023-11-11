@@ -27,3 +27,10 @@ module "bigquery" {
   ingestion_storage_bucket_uri    = module.storage-buckets.ingestion_storage_bucket_uri
   depends_on                      = [module.service-accounts]
 }
+
+module "pub-sub" {
+  source = "./pub-sub"
+  project_id = var.project_id
+  region = var.region
+  depends_on = [ module.service-apis, module.service-accounts ]
+}
