@@ -1,190 +1,169 @@
-import argparse
-import datetime as dt
-import logging
-import time
+import json
 
-import pytz
+import apache_beam as beam
+import numpy as np
 
-from google.cloud import bigquery, pubsub
-
-TIME_FORMAT = "%Y-%m-%d %H:%M:%S %Z"
-RFC3339_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S-00:00"
+from apache_beam.transforms import window
 
 
-def get_event_query() -> str:
-    query: str = """
-    select
-      event_type,
-      event_time as notify_time,
-      event_data
-    from
-      dsongcp.flights_sim_events
-    where
-      event_time >= @start_time
-      and event_time < @end_time
-    order by
-      event_time asc
-"""
-    return query
-
-
-def get_time_to_sleep(
-    notify_time: dt.datetime,
-    script_start_time: dt.datetime,
-    sim_start_time: dt.datetime,
-    speed_factor: int,
-) -> int:
-    time_elapsed: int = (dt.datetime.utcnow() - script_start_time).seconds
-
-    sim_time_elapsed: int = (notify_time - sim_start_time).seconds / speed_factor
-
-    time_to_sleep: int = sim_time_elapsed - time_elapsed
-    return time_to_sleep
-
-
-def setup_topics(
-    project: str, event_types: list, pubsub_publisher: pubsub.PublisherClient
-) -> dict:
-    # The book uses this time to create topics
-    # This project controls them with Terraform, so no need
-    return {
-        event_type: pubsub_publisher.topic_path(project=project, topic=event_type.replace("_", "-"))
-        for event_type in event_types
-    }
-
-
-def publish_events(
-    pubsub_publisher: pubsub.PublisherClient,
-    topics: dict,
-    notifications: dict,
-    event_time: dt.datetime,
-):
-    timestamp: str = event_time.strftime(RFC3339_TIME_FORMAT)
-    for key, topic in topics.items():
-        events: list = notifications[key]
-        next_event: str
-        for next_event in events:
-            pubsub_publisher.publish(
-                topic, next_event.encode(), EventTimeStamp=timestamp
-            )
-
-
-def send_notifications(
-    publisher: pubsub.PublisherClient,
-    topics: dict,
-    data: bigquery.QueryJob,
-    sim_start_time: dt.datetime,
-    script_start_time: dt.datetime,
-    speed_factor: int,
-) -> bool:
-    # Separate list to track items sent to each topic
-    notifications: dict[str, list] = {x: [] for x in topics.keys()}
-
-    for next_row in data:
-        event, event_time, event_data = next_row
-
-        if (
-            get_time_to_sleep(
-                notify_time=event_time,
-                script_start_time=script_start_time,
-                sim_start_time=sim_start_time,
-                speed_factor=speed_factor,
-            )
-            > 1
-        ):
-            publish_events(
-                pubsub_publisher=publisher,
-                topics=topics,
-                notifications=notifications,
-                event_time=event_time,
-            )
-            # Reset buffer
-            notifications = {x: [] for x in topics.keys()}
-
-            new_sleep_time: int = get_time_to_sleep(
-                notify_time=event_time,
-                script_start_time=script_start_time,
-                sim_start_time=sim_start_time,
-                speed_factor=speed_factor,
-            )
-
-            if new_sleep_time > 0:
-                logging.info(f"Sleeping {new_sleep_time} seconds")
-                time.sleep(new_sleep_time)
-
-        notifications[event].append(event_data)
-
-    # Clear buffer if any left over
-    publish_events(
-        pubsub_publisher=publisher,
-        topics=topics,
-        notifications=notifications,
-        event_time=event_time,
-    )
-
-    return True
-
-
-def main(args: argparse.Namespace):
-    script_start_time: dt.datetime = dt.datetime.utcnow()
-    sim_start_time: dt.datetime = dt.datetime.strptime(args.start_time, TIME_FORMAT).replace(tzinfo=pytz.UTC)
-    query: str = get_event_query()
-
-    bq_client: bigquery.Client = bigquery.Client()
-    publisher: pubsub.PublisherClient = pubsub.PublisherClient()
-    bq_job: bigquery.QueryJobConfig = bigquery.QueryJobConfig(
-        query_parameters=[
-            bigquery.ScalarQueryParameter("start_time", "TIMESTAMP", args.start_time),
-            bigquery.ScalarQueryParameter("end_time", "TIMESTAMP", args.end_time),
+def get_stats_schema():
+    return ",".join(
+        [
+            "airport:STRING",
+            "avg_arr_delay:FLOAT",
+            "avg_dep_delay:FLOAT",
+            "num_flights:INT64",
+            "start_time:TIMESTAMP",
+            "end_time:TIMESTAMP",
         ]
     )
 
-    result: bigquery.QueryJob = bq_client.query(query=query, job_config=bq_job)
-    event_types: list = ["wheels_off", "arrived", "departed"]
-    topics: dict = setup_topics(
-        project=args.project, event_types=event_types, pubsub_publisher=publisher
+
+def get_events_schema():
+    return ",".join(
+        [
+            get_flights_schema(),
+            "event_type:STRING",
+            "event_time:TIMESTAMP",
+            "event_data:STRING",
+        ]
     )
 
-    success: bool = send_notifications(
-        publisher=publisher,
-        topics=topics,
-        data=result,
-        sim_start_time=sim_start_time,
-        script_start_time=script_start_time,
-        speed_factor=args.speed_factor,
+
+def get_flights_schema():
+    return ",".join(
+        [
+            "flight_date:DATE",
+            "unique_carrier:STRING",
+            "origin_airport_seq_id:STRING",
+            "origin:STRING",
+            "dest_airport_seq_id:STRING",
+            "dest:STRING",
+            "crs_dep_time:TIMESTAMP",
+            "dep_time:TIMESTAMP",
+            "dep_delay:FLOAT",
+            "taxi_out:FLOAT",
+            "wheels_off:TIMESTAMP",
+            "wheels_on:TIMESTAMP",
+            "taxi_in:FLOAT",
+            "crs_arr_time:TIMESTAMP",
+            "arr_time:TIMESTAMP",
+            "arr_delay:FLOAT",
+            "cancelled:BOOLEAN",
+            "diverted:BOOLEAN",
+            "distance:FLOAT",
+            "dep_airport_lat:FLOAT",
+            "dep_airport_lon:FLOAT",
+            "dep_airport_tzoffset:FLOAT",
+            "arr_airport_lat:FLOAT",
+            "arr_airport_lon:FLOAT",
+            "arr_airport_tzoffset:FLOAT",
+            "year:STRING",
+        ]
     )
 
-    return success
+
+def by_airport(event):
+    if event["event_type"] == "departed":
+        return event["origin"], event
+    return event["dest"], event
 
 
-def parse_args() -> argparse.Namespace:
-    parser: argparse.ArgumentParser = argparse.ArgumentParser(
-        description="Send simulated flight events to Cloud Pub/Sub"
-    )
-    parser.add_argument(
-        "--start_time", help="Example: 2015-05-01 00:00:00 UTC", required=True
-    )
-    parser.add_argument(
-        "--end_time", help="Example: 2015-05-03 00:00:00 UTC", required=True
-    )
-    parser.add_argument(
-        "--project", help="your project id, to create pubsub topic", required=True
-    )
-    parser.add_argument(
-        "--speed_factor",
-        help="Example: 60 implies 1 hour of data sent to Cloud Pub/Sub in 1 minute",
-        required=True,
-        type=float,
-    )
-    parser.add_argument(
-        "--jitter",
-        help="type of jitter to add: None, uniform, exp  are the three options",
-        default="None",
-    )
+def compute_stats(airport, events):
+    arrived = [
+        event["arr_delay"] for event in events if event["event_type"] == "arrived"
+    ]
+    departed = [
+        event["dep_delay"] for event in events if event["event_type"] == "departed"
+    ]
+    avg_arr_delay = float(np.mean(arrived)) if len(arrived) > 0 else None
+    avg_dep_delay = float(np.mean(departed)) if len(departed) > 0 else None
 
-    return parser.parse_args()
+    num_flights = len(events)
+    start_time = min([event["event_time"] for event in events])
+    latest_time = max([event["event_time"] for event in events])
+
+    return {
+        "airport": airport,
+        "avg_arr_delay": avg_arr_delay,
+        "avg_dep_delay": avg_dep_delay,
+        "num_flights": num_flights,
+        "start_time": start_time,
+        "end_time": latest_time,
+    }
+
+
+def main():
+    project = "ajp-ds-gcp"
+    bucket = "ajp-ds-gcp-flights"
+    region = "australia-southeast1"
+
+    pipeline_args = [
+        f"--project={project}",
+        "--job_name=flight-events",
+        "--save_main_session",
+        f"--staging_location=gs://{bucket}/flights/staging/",
+        f"--temp_location=gs://{bucket}/flights/temp/",
+        "--setup_file=./setup.py",
+        "--max_num_workers=8",
+        f"--region={region}",
+        "--runner=DataflowRunner",
+        "--service_account_email=ds-gcp-ingestion@ajp-ds-gcp.iam.gserviceaccount.com",
+        "--streaming",
+    ]
+
+    with beam.Pipeline(argv=pipeline_args) as pipeline:
+        topics = ["arrived", "departed", "wheels-off"]
+        topic_pipelines = {}
+
+        for topic in topics:
+            topic_path = f"projects/{project}/topics/{topic}"
+            events = (
+                pipeline
+                | f"{topic}: read"
+                >> beam.io.ReadFromPubSub(
+                    topic=topic_path, timestamp_attribute="EventTimeStamp"
+                )
+                | f"{topic}: parse" >> beam.Map(lambda data: json.loads(data))
+            )
+            topic_pipelines[topic] = events
+
+        all_events = (
+            topic_pipelines["arrived"],
+            topic_pipelines["departed"],
+        ) | beam.Flatten()
+
+        schema = get_events_schema()
+        (
+            all_events
+            | "all: bigquery"
+            >> beam.io.WriteToBigQuery(
+                "dsongcp.streaming_events",
+                schema=schema,
+                create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
+            )
+        )
+
+        stats_schema = get_stats_schema()
+
+        stats = (
+            all_events
+            | "map: airport" >> beam.Map(by_airport)
+            | "window" >> beam.WindowInto(window.SlidingWindows(60 * 60, 5 * 60))
+            | "group: key" >> beam.GroupByKey()
+            | "stats" >> beam.Map(lambda row: compute_stats(row[0], row[1]))
+        )
+
+        (
+            stats
+            | "write: bq"
+            >> beam.io.WriteToBigQuery(
+                "dsongcp.streaming_delays",
+                schema=stats_schema,
+                create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
+            )
+        )
 
 
 if __name__ == "__main__":
-    args: argparse.Namespace = parse_args()
-    main(args=args)
+    main()

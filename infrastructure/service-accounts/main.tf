@@ -84,6 +84,12 @@ resource "google_project_iam_member" "dataflow_service_impersonate_user" {
   member  = "serviceAccount:service-${var.project_number}@dataflow-service-producer-prod.iam.gserviceaccount.com"
 }
 
+resource "google_project_iam_member" "pubsub_admin" {
+  project = var.project_id
+  role    = "roles/pubsub.admin"
+  member  = "serviceAccount:${google_service_account.ingestion_service_account.email}"
+}
+
 output "ingestion_service_account_email" {
   value = google_service_account.ingestion_service_account.email
 }
