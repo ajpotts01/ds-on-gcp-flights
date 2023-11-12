@@ -12,6 +12,7 @@ def main() -> str:
     except Exception as ex:
         return f"Error: {ex}"
 
+
 @functions_framework.http
 def transform_flights(request):
     result: str = main()

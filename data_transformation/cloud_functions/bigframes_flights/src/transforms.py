@@ -113,7 +113,7 @@ def create_new_table(cols: dict[str, str], table_name: str):
 
     # Weird workaround. Can't do truncate table...
     table: bigquery.Table = bigquery.Table(full_table_name, schema=schema)
-    
+
     bq_client.delete_table(table=table, not_found_ok=True)
     table.time_partitioning = bigquery.TimePartitioning(
         type_=bigquery.TimePartitioningType.DAY, field="flight_date"
@@ -136,7 +136,9 @@ def main():
         cols=get_column_selection_map(), table_name=table_target
     )
 
-    df_flights_raw: bpd.DataFrame = bpd.read_gbq(query=table_source)
+    bpd.pandas.set_option("display.max_colwidth", None)
+
+    df_flights_raw: bpd.DataFrame = bpd.read_gbq(query_or_table=table_source)
     df_flights_transformed: bpd.DataFrame = run_transforms(df_raw=df_flights_raw)
 
     if table:

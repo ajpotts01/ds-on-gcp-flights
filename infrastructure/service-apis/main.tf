@@ -49,3 +49,18 @@ resource "google_project_service" "cloud_functions_service" {
   project = var.project_id
   service = "cloudfunctions.googleapis.com"
 }
+
+resource "google_project_service" "bigquery_datatransfer_service" {
+  project = var.project_id
+  service = "bigquerydatatransfer.googleapis.com"
+}
+
+resource "google_project_service" "gke_service" {
+  project = var.project_id
+  service = "container.googleapis.com"
+}
+
+resource "google_project_service" "dataflow_service" {
+  project = var.project_id
+  service = "dataflow.googleapis.com"
+}

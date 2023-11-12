@@ -52,3 +52,7 @@ resource "google_storage_bucket_iam_binding" "storage_bucket_binding" {
   members = ["serviceAccount:${var.ingestion_service_account_email}"
   ]
 }
+
+output "ingestion_storage_bucket_uri" {
+  value = google_storage_bucket.flights_ingestion.url
+}
