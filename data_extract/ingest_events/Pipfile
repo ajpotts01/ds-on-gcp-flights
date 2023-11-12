@@ -8,6 +8,7 @@ timezonefinder = "*"
 pytz = "*"
 apache-beam = {extras = ["gcp"], version = "2.46.0"}
 black = "*"
+numpy = "*"
 
 [dev-packages]
 
