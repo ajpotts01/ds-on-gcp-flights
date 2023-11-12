@@ -218,7 +218,7 @@ def main():
 
     pipeline_args = [
         f"--project={project}",
-        "--job_name=flight-events",
+        "--job_name=flight-events-batch",
         "--save_main_session",
         f"--staging_location=gs://{bucket}/flights/staging/",
         f"--temp_location=gs://{bucket}/flights/temp/",
@@ -255,7 +255,7 @@ def main():
             pipeline
             | "flights: read"
             >> beam.io.ReadFromBigQuery(
-                query="SELECT * FROM dsongcp.flights_v WHERE rand() < 0.001",
+                query="SELECT * FROM dsongcp.flights_v",
                 use_standard_sql=True,
                 # gcs_location=f"gs://{bucket}/flights/temp",
                 # project="ajp-ds-gcp",
