@@ -4,6 +4,12 @@ resource "google_service_account" "ingestion_service_account" {
   display_name = "Ingestion Service Account"
 }
 
+resource "google_service_account" "vertex_service_account" {
+  account_id   = "ds-gcp-ml"
+  project      = var.project_id
+  display_name = "ML Service Account"
+}
+
 resource "google_project_iam_member" "service_account_actor_binding" {
   project = var.project_id
   role    = "roles/iam.serviceAccountUser"
@@ -90,6 +96,28 @@ resource "google_project_iam_member" "pubsub_admin" {
   member  = "serviceAccount:${google_service_account.ingestion_service_account.email}"
 }
 
+resource "google_project_iam_member" "vertex_service_agent" {
+  project = var.project_id
+  role    = "roles/aiplatform.serviceAgent"
+  member  = "serviceAccount:${google_service_account.vertex_service_account.email}"
+}
+
+resource "google_project_iam_member" "vertex_notebook_service_agent" {
+  project = var.project_id
+  role    = "roles/notebooks.serviceAgent"
+  member  = "serviceAccount:${google_service_account.vertex_service_account.email}"
+}
+
+resource "google_project_iam_member" "vertex_service_impersonate_user" {
+  project = var.project_id
+  role    = "roles/iam.serviceAccountUser"
+  member  = "serviceAccount:${google_service_account.vertex_service_account.email}"
+}
+
 output "ingestion_service_account_email" {
   value = google_service_account.ingestion_service_account.email
+}
+
+output "vertex_service_account_email" {
+  value = google_service_account.vertex_service_account.email
 }

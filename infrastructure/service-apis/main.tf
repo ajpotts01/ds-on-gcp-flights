@@ -37,3 +37,8 @@ resource "google_project_service" "vertex_ai_service" {
   project = var.project_id
   service = "aiplatform.googleapis.com"
 }
+
+resource "google_project_service" "notebooks_service" {
+  project = var.project_id
+  service = "notebooks.googleapis.com"
+}

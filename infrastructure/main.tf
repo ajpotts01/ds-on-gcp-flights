@@ -29,8 +29,16 @@ module "bigquery" {
 }
 
 module "pub-sub" {
-  source = "./pub-sub"
+  source     = "./pub-sub"
   project_id = var.project_id
-  region = var.region
-  depends_on = [ module.service-apis, module.service-accounts ]
+  region     = var.region
+  depends_on = [module.service-apis, module.service-accounts]
+}
+
+module "vertex-ai" {
+  source                       = "./vertex-ai"
+  project_id                   = var.project_id
+  region                       = var.region
+  vertex_service_account_email = module.service-accounts.vertex_service_account_email
+  depends_on                   = [module.service-apis, module.service-accounts]
 }
